@@ -1,0 +1,16 @@
+{
+  "name": "@fuelflow/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "FuelFlow Express API",
+  "scripts": {
+    "dev": "echo \"API not yet implemented\" && exit 0",
+    "build": "echo \"API not yet implemented\" && exit 0",
+    "lint": "echo \"API not yet implemented\" && exit 0",
+    "typecheck": "echo \"API not yet implemented\" && exit 0",
+    "test": "echo \"API not yet implemented\" && exit 0",
+    "db:generate": "echo \"API not yet implemented\" && exit 0",
+    "db:push": "echo \"API not yet implemented\" && exit 0",
+    "db:studio": "echo \"API not yet implemented\" && exit 0"
+  }
+}

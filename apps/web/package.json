@@ -1,0 +1,13 @@
+{
+  "name": "@fuelflow/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "FuelFlow React Frontend",
+  "scripts": {
+    "dev": "echo \"Web not yet implemented\" && exit 0",
+    "build": "echo \"Web not yet implemented\" && exit 0",
+    "lint": "echo \"Web not yet implemented\" && exit 0",
+    "typecheck": "echo \"Web not yet implemented\" && exit 0",
+    "test": "echo \"Web not yet implemented\" && exit 0"
+  }
+}
