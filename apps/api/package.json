@@ -3,14 +3,46 @@
   "version": "0.0.0",
   "private": true,
   "description": "FuelFlow Express API",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "dev": "echo \"API not yet implemented\" && exit 0",
-    "build": "echo \"API not yet implemented\" && exit 0",
-    "lint": "echo \"API not yet implemented\" && exit 0",
-    "typecheck": "echo \"API not yet implemented\" && exit 0",
-    "test": "echo \"API not yet implemented\" && exit 0",
-    "db:generate": "echo \"API not yet implemented\" && exit 0",
-    "db:push": "echo \"API not yet implemented\" && exit 0",
-    "db:studio": "echo \"API not yet implemented\" && exit 0"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "echo \"Not implemented yet\" && exit 0",
+    "db:push": "echo \"Not implemented yet\" && exit 0",
+    "db:studio": "echo \"Not implemented yet\" && exit 0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "zod": "^3.23.0",
+    "dotenv": "^16.4.0",
+    "@fuelflow/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0",
+    "tsx": "^4.19.0",
+    "vitest": "^2.1.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2"
   }
 }
