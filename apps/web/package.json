@@ -3,11 +3,39 @@
   "version": "0.0.0",
   "private": true,
   "description": "FuelFlow React Frontend",
+  "type": "module",
   "scripts": {
-    "dev": "echo \"Web not yet implemented\" && exit 0",
-    "build": "echo \"Web not yet implemented\" && exit 0",
-    "lint": "echo \"Web not yet implemented\" && exit 0",
-    "typecheck": "echo \"Web not yet implemented\" && exit 0",
-    "test": "echo \"Web not yet implemented\" && exit 0"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@fuelflow/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.2",
+    "vitest": "^2.1.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/user-event": "^14.5.2",
+    "eslint": "^9.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "jsdom": "^24.0.0",
+    "tailwindcss": "^3.4.7",
+    "postcss": "^8.4.41",
+    "autoprefixer": "^10.4.20"
   }
 }
