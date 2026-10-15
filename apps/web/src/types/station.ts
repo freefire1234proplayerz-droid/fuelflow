@@ -33,3 +33,5 @@ export const DEFAULT_FILTERS: SearchFilters = {
   openOnly: false,
   minRating: 0,
 };
+
+export type SortOption = { value: string; label: string };

@@ -1,11 +1,12 @@
-import React from "react";
+import { forwardRef, type SelectHTMLAttributes } from 'react';
 
-interface SelectOption {
+export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -13,14 +14,32 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, helperText, options, placeholder, className = "", id, ...props }, ref) => {
-    const selectId = id || label?.toLowerCase().replace(/\s+/g, "-");
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  (
+    {
+      label,
+      error,
+      helperText,
+      options,
+      placeholder,
+      className = '',
+      id,
+      ...props
+    },
+    ref
+  ) => {
+    const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    const errorId = `${selectId}-error`;
+    const helperId = `${selectId}-helper`;
+    const hasError = Boolean(error);
 
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-slate-700 mb-1.5">
+          <label
+            htmlFor={selectId}
+            className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5"
+          >
             {label}
           </label>
         )}
@@ -29,15 +48,19 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={`
-              w-full px-4 py-2.5 pr-10 rounded-lg border appearance-none transition-colors
-              bg-white text-slate-900
-              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-              disabled:bg-slate-50 disabled:cursor-not-allowed
-              ${error ? "border-red-300 focus:ring-red-500" : "border-slate-300 hover:border-slate-400"}
+              w-full px-4 py-2.5 pr-10 rounded-xl border appearance-none transition-all duration-200
+              bg-white dark:bg-surface-800
+              text-surface-900 dark:text-surface-100
+              focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+              disabled:bg-surface-100 dark:disabled:bg-surface-700 disabled:cursor-not-allowed
+              ${hasError
+                ? 'border-red-400 dark:border-red-500 focus:ring-red-500'
+                : 'border-surface-300 dark:border-surface-600 hover:border-surface-400 dark:hover:border-surface-500'
+              }
               ${className}
             `}
-            aria-invalid={error ? "true" : "false"}
-            aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
+            aria-invalid={hasError}
+            aria-describedby={hasError ? errorId : helperText ? helperId : undefined}
             {...props}
           >
             {placeholder && (
@@ -46,24 +69,24 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             )}
             {options.map((option) => (
-              <option key={option.value} value={option.value}>
+              <option key={option.value} value={option.value} disabled={option.disabled}>
                 {option.label}
               </option>
             ))}
           </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-surface-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
-        {error && (
-          <p id={`${selectId}-error`} className="mt-1.5 text-sm text-red-600" role="alert">
+        {hasError && (
+          <p id={errorId} className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
             {error}
           </p>
         )}
-        {helperText && !error && (
-          <p id={`${selectId}-helper`} className="mt-1.5 text-sm text-slate-500">
+        {helperText && !hasError && (
+          <p id={helperId} className="mt-1.5 text-sm text-surface-500 dark:text-surface-400">
             {helperText}
           </p>
         )}
@@ -72,4 +95,4 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   }
 );
 
-Select.displayName = "Select";
+Select.displayName = 'Select';

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import App from "./App";
 import { DEMO_STATIONS } from "./utils/demoData";
 
@@ -19,14 +19,9 @@ describe("App", () => {
     expect(screen.getByText(/Online|Offline|Checking/i)).toBeInTheDocument();
   });
 
-  it("displays demo mode notice", () => {
-    render(<App />);
-    expect(screen.getAllByText(/Demo Mode:/i).length).toBeGreaterThan(0);
-  });
-
   it("renders search panel with location input", () => {
     render(<App />);
-    expect(screen.getByLabelText(/Location/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Enter address, city, or PIN code/i)).toBeInTheDocument();
   });
 
   it("shows station list with demo stations", () => {
@@ -36,17 +31,10 @@ describe("App", () => {
     });
   });
 
-  it("displays map placeholder section", () => {
+  it("displays map component section when map tab is clicked", () => {
     render(<App />);
-    expect(screen.getByText(/Map View/i)).toBeInTheDocument();
-    expect(screen.getByText(/Interactive Map/i)).toBeInTheDocument();
-    expect(screen.getByText(/Map integration coming soon/i)).toBeInTheDocument();
-  });
-
-  it("shows footer with demo data notice", () => {
-    render(<App />);
-    expect(screen.getByText(/Demo Data Notice/i)).toBeInTheDocument();
-    expect(screen.getByText(/simulated for demonstration purposes only/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Map/i }));
+    expect(screen.getByText(/Loading map/i)).toBeInTheDocument();
   });
 
   it("has accessible heading structure", () => {
@@ -55,11 +43,9 @@ describe("App", () => {
     expect(headings.length).toBeGreaterThan(0);
   });
 
-  it("map placeholder shows station buttons", () => {
+  it("map component renders without errors", () => {
     render(<App />);
-    const stationButtons = screen.getAllByText("Shell City Center");
-    expect(stationButtons.length).toBeGreaterThan(0);
-    expect(screen.getAllByText("BP Highway Station").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("TotalEnergies Green Hub").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Map/i }));
+    expect(screen.getByText(/Loading map/i)).toBeInTheDocument();
   });
 });

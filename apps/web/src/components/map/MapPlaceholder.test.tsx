@@ -13,14 +13,14 @@ describe("MapPlaceholder", () => {
 
   it("shows station buttons for first 3 stations", () => {
     render(<MapPlaceholder stations={DEMO_STATIONS} />);
-    expect(screen.getByText("Shell City Center")).toBeInTheDocument();
-    expect(screen.getByText("BP Highway Station")).toBeInTheDocument();
-    expect(screen.getByText("TotalEnergies Green Hub")).toBeInTheDocument();
+    expect(screen.getByText("HP Petrol Pump - Bandra West")).toBeInTheDocument();
+    expect(screen.getByText("BPCL - Andheri East")).toBeInTheDocument();
+    expect(screen.getByText("Indian Oil - Dadar TT")).toBeInTheDocument();
   });
 
   it("shows count of additional stations when more than 3", () => {
     render(<MapPlaceholder stations={DEMO_STATIONS} />);
-    expect(screen.getByText("+2 more stations")).toBeInTheDocument();
+    expect(screen.getByText("+7 more stations")).toBeInTheDocument();
   });
 
   it("does not show selected station panel when none selected", () => {
@@ -37,7 +37,7 @@ describe("MapPlaceholder", () => {
   it("calls onStationClick when station button is clicked", () => {
     const onStationClick = vi.fn();
     render(<MapPlaceholder stations={DEMO_STATIONS} onStationClick={onStationClick} />);
-    fireEvent.click(screen.getByText("Shell City Center"));
+    fireEvent.click(screen.getByText("HP Petrol Pump - Bandra West"));
     expect(onStationClick).toHaveBeenCalledWith(DEMO_STATIONS[0]);
   });
 

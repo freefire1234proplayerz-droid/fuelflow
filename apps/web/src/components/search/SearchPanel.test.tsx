@@ -7,6 +7,7 @@ describe("SearchPanel", () => {
   const createDefaultProps = () => ({
     filters: DEFAULT_FILTERS,
     onFiltersChange: vi.fn(),
+    onSortChange: vi.fn(),
     onSearch: vi.fn(),
     loading: false,
     demoMode: true,
@@ -74,17 +75,19 @@ describe("SearchPanel", () => {
     expect(defaultProps.onSearch).toHaveBeenCalled();
   });
 
-  it("calls onFiltersChange with default values when reset is clicked", () => {
+  it("calls onFiltersChange and onSortChange with default values when reset is clicked", () => {
     const customFilters = { ...DEFAULT_FILTERS, maxDistance: 50, minRating: 4.0 };
     const props = { ...defaultProps, filters: customFilters };
     render(<SearchPanel {...props} />);
     const resetButton = screen.getByRole("button", { name: /Reset/i });
     fireEvent.click(resetButton);
-    expect(defaultProps.onFiltersChange).toHaveBeenCalledWith(DEFAULT_FILTERS);
+    expect(props.onFiltersChange).toHaveBeenCalledWith(DEFAULT_FILTERS);
+    expect(props.onSortChange).toHaveBeenCalledWith("distance");
   });
 
   it("disables buttons when loading", () => {
-    const loadingProps = { ...defaultProps, loading: true };
+    const customFilters = { ...DEFAULT_FILTERS, maxDistance: 50, minRating: 4.0 };
+    const loadingProps = { ...defaultProps, filters: customFilters, loading: true };
     render(<SearchPanel {...loadingProps} />);
     expect(screen.getByRole("button", { name: /Searching.../i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Reset/i })).toBeDisabled();

@@ -1,37 +1,63 @@
-import { useState, useCallback, useMemo } from "react";
-import { SearchPanel } from "./components/search/SearchPanel";
-import { StationList } from "./components/station/StationList";
-import { MapPlaceholder } from "./components/map/MapPlaceholder";
-import { HealthIndicator } from "./components/health/HealthIndicator";
-import { useHealth } from "./hooks/useHealth";
-import { DEMO_STATIONS } from "./utils/demoData";
-import type { SearchFilters, Station } from "./types/station";
-import { DEFAULT_FILTERS } from "./types/station";
+import { useState, useMemo, useEffect } from 'react';
+import { Header } from './components/layout/Header';
+import { BottomNavigation } from './components/layout/BottomNavigation';
+import { SearchPanel } from './components/search/SearchPanel';
+import { StationList } from './components/station/StationList';
+import { MapComponent } from './components/map/MapComponent';
+import { StationDetailSheet } from './components/station/StationDetailSheet';
+import { LocationPermission } from './components/location/LocationPermission';
+import { DEMO_STATIONS, MUMBAI_CENTER } from './utils/demoData';
+import type { SearchFilters, Station } from './types/station';
+import { DEFAULT_FILTERS } from './types/station';
+import { Badge } from './components/ui/Badge';
 
-const APP_NAME = "FuelFlow";
-const APP_TAGLINE = "Find fuel. Skip the queue.";
+const NAV_ITEMS = [
+  { id: 'explore', label: 'Explore', icon: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  ), activeIcon: (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  ) },
+  { id: 'map', label: 'Map', icon: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-5.447A1 1 0 013 12V8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-.293.707L9 20zm9-6a1 1 0 010-2 1 1 0 012 0v2a1 1 0 01-2 0V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3h8a3 3 0 003-3v-2z" />
+    </svg>
+  ), activeIcon: (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 20l-5.447-5.447A1 1 0 013 12V8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-.293.707L9 20zm9-6a1 1 0 010-2 1 1 0 012 0v2a1 1 0 01-2 0V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3h8a3 3 0 003-3v-2z" />
+    </svg>
+  ) },
+  { id: 'saved', label: 'Saved', icon: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+    </svg>
+  ), activeIcon: (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+    </svg>
+  ) },
+  { id: 'profile', label: 'Profile', icon: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h18a7 7 0 00-7-7z" />
+    </svg>
+  ), activeIcon: (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h18a7 7 0 00-7-7z" />
+    </svg>
+  ) },
+];
 
 function App() {
-  const { health, loading: healthLoading, error: healthError, refetch: refetchHealth } = useHealth();
+  const [activeTab, setActiveTab] = useState<'explore' | 'map' | 'saved' | 'profile'>('explore');
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+  const [sortBy, setSortBy] = useState<string>('distance');
   const [stations, setStations] = useState<Station[]>(DEMO_STATIONS);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-
-  const handleSearch = useCallback(async () => {
-    setSearchLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setStations(DEMO_STATIONS);
-    setSearchLoading(false);
-  }, []);
-
-  const handleFilterChange = useCallback((newFilters: SearchFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  const handleStationSelect = useCallback((station: Station) => {
-    setSelectedStation(station);
-  }, []);
+  const [location, setLocation] = useState<string>('Mumbai, Maharashtra');
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const filteredStations = useMemo(() => {
     return stations.filter((station) => {
@@ -45,114 +71,293 @@ function App() {
     });
   }, [stations, filters]);
 
+  const sortedStations = useMemo(() => {
+    const sorted = [...filteredStations];
+    switch (sortBy) {
+      case 'distance':
+        return sorted.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+      case 'price_petrol':
+        return sorted.sort((a, b) => {
+          const aPrice = a.fuelTypes.find((f) => f.type === 'petrol')?.price ?? Infinity;
+          const bPrice = b.fuelTypes.find((f) => f.type === 'petrol')?.price ?? Infinity;
+          return aPrice - bPrice;
+        });
+      case 'price_diesel':
+        return sorted.sort((a, b) => {
+          const aPrice = a.fuelTypes.find((f) => f.type === 'diesel')?.price ?? Infinity;
+          const bPrice = b.fuelTypes.find((f) => f.type === 'diesel')?.price ?? Infinity;
+          return aPrice - bPrice;
+        });
+      case 'rating':
+        return sorted.sort((a, b) => b.rating - a.rating);
+      default:
+        return sorted;
+    }
+  }, [filteredStations, sortBy]);
+
+  // Calculate distances from user location if available
+  useEffect(() => {
+    if (userLocation) {
+      const updatedStations = stations.map((station) => {
+        if (station.latitude && station.longitude) {
+          const distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            station.latitude,
+            station.longitude
+          );
+          return { ...station, distance };
+        }
+        return station;
+      });
+      setStations(updatedStations);
+    }
+  }, [userLocation, stations]);
+
+  const activeFiltersCount =
+    filters.fuelTypes.length !== 4 ||
+    filters.maxDistance !== 10 ||
+    filters.openOnly ||
+    filters.minRating > 0;
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" fill="#22c55e" />
-                <path d="M50 20 L50 50 L30 30 M50 50 L70 30" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <circle cx="50" cy="75" r="8" fill="white" opacity="0.9" />
-                <circle cx="50" cy="75" r="4" fill="#22c55e" />
-              </svg>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">{APP_NAME}</h1>
-                <p className="text-xs text-slate-500">{APP_TAGLINE}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <HealthIndicator
-                health={health}
-                loading={healthLoading}
-                error={healthError}
-                onRetry={refetchHealth}
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+      <Header
+        title="FuelFlow"
+        subtitle="Find fuel. Skip the queue."
+        showHealth={true}
+        showLocation={true}
+        location={location}
+        onLocationClick={() => navigator.geolocation?.getCurrentPosition(
+          (pos) => {
+            setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+            setLocation(`Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`);
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 10000 }
+        )}
+      />
+
+      <main className="pb-24 pt-4" role="main">
+        <div className="max-w-screen-xl mx-auto px-4 space-y-4">
+          {activeTab === 'explore' && (
+            <>
+              <SearchPanel
+                filters={filters}
+                sortBy={sortBy}
+                onFiltersChange={setFilters}
+                onSortChange={setSortBy}
+                onSearch={() => {}}
+                onLocationClick={() => navigator.geolocation?.getCurrentPosition(
+                  (pos) => {
+                    setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+                    setLocation(`Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`);
+                  },
+                  () => {},
+                  { enableHighAccuracy: true, timeout: 10000 }
+                )}
+                loading={false}
+                demoMode={true}
+                location={location}
               />
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <aside className="lg:col-span-1">
-            <SearchPanel
-              filters={filters}
-              onFiltersChange={handleFilterChange}
-              onSearch={handleSearch}
-              loading={searchLoading}
-              demoMode={true}
-            />
-          </aside>
-
-          <div className="lg:col-span-2 space-y-6">
-            <MapPlaceholder
-              stations={filteredStations}
-              selectedStation={selectedStation}
-              onStationClick={handleStationSelect}
-            />
-
-            <section aria-labelledby="stations-title">
               <div className="flex items-center justify-between mb-4">
-                <h2 id="stations-title" className="text-lg font-semibold text-slate-900">
-                  Nearby Stations ({filteredStations.length})
+                <h2 id="stations-title" className="text-heading-sm font-semibold text-surface-900 dark:text-surface-100">
+                  Nearby Stations ({sortedStations.length})
                 </h2>
-                <span className="text-sm text-slate-500">
-                  Showing {filteredStations.length} of {stations.length} stations
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-surface-500 dark:text-surface-400">
+                    {activeFiltersCount && <Badge variant="brand" size="sm">Filters</Badge>}
+                  </span>
+                </div>
               </div>
+
               <StationList
-                stations={filteredStations}
-                onSelectStation={handleStationSelect}
-                loading={searchLoading}
+                stations={sortedStations}
+                onSelectStation={setSelectedStation}
+                onNavigate={(station) => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const url = `https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${station.latitude},${station.longitude}&travelmode=driving`;
+                        window.open(url, '_blank');
+                      },
+                      () => {
+                        const url = `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}&travelmode=driving`;
+                        window.open(url, '_blank');
+                      },
+                      { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                  }
+                  setSelectedStation(null);
+                }}
+                loading={false}
                 emptyMessage={
                   filters.fuelTypes.length === 0
-                    ? "Select at least one fuel type to see stations."
-                    : "No stations match your current filters. Try adjusting your search criteria."
+                    ? 'Select at least one fuel type to see stations.'
+                    : 'No stations match your current filters. Try adjusting your search criteria.'
                 }
               />
-            </section>
-          </div>
+            </>
+          )}
+
+          {activeTab === 'map' && (
+            <div className="h-[calc(100vh-200px)] min-h-[400px]">
+              <MapComponent
+                stations={sortedStations}
+                selectedStation={selectedStation}
+                onStationClick={setSelectedStation}
+                center={MUMBAI_CENTER}
+                zoom={12}
+                className="w-full h-full"
+              />
+            </div>
+          )}
+
+          {activeTab === 'saved' && (
+            <div className="text-center py-16 px-4">
+              <svg className="mx-auto h-20 w-20 text-surface-300 dark:text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <h3 className="mt-4 text-heading-sm font-medium text-surface-900 dark:text-surface-100">
+                No saved stations yet
+              </h3>
+              <p className="mt-2 text-surface-500 dark:text-surface-400 max-w-md mx-auto">
+                Tap the bookmark icon on any station to save it for quick access.
+              </p>
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
+                    <svg className="w-10 h-10 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h18a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-heading-sm font-bold text-surface-900 dark:text-surface-100">
+                      Welcome to FuelFlow
+                    </h3>
+                    <p className="text-sm text-surface-500 dark:text-surface-400">
+                      Your personal fuel companion
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-5">
+                <h3 className="text-heading-sm font-semibold text-surface-900 dark:text-surface-100 mb-4">
+                  Preferences
+                </h3>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                      Dark Mode
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                      Show EV Charging Stations
+                    </span>
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="w-5 h-5 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                      Price Alerts
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-5">
+                <h3 className="text-heading-sm font-semibold text-surface-900 dark:text-surface-100 mb-4">
+                  About
+                </h3>
+                <div className="space-y-2 text-sm text-surface-500 dark:text-surface-400">
+                  <div className="flex justify-between">
+                    <span>Version</span>
+                    <span className="font-mono text-surface-700 dark:text-surface-300">1.0.0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Demo Mode</span>
+                    <span className="font-mono text-surface-700 dark:text-surface-300">Enabled</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Data Source</span>
+                    <span className="font-mono text-surface-700 dark:text-surface-300">Simulated</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
-      <footer className="bg-white border-t border-slate-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-2">Demo Data Notice</h3>
-              <p className="text-sm text-slate-600">
-                All station data, prices, availability, and ratings shown are simulated for demonstration purposes only.
-                No real fuel stations, live prices, or location services are integrated.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-2">Fuel Types</h3>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                {["petrol", "diesel", "cng", "ev_charging"].map((type) => (
-                  <span key={type} className="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
-                    {type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 mb-2">Status</h3>
-              <p className="text-sm text-slate-600">
-                Phase 2: Frontend Foundation Complete
-                <br />
-                Backend API: <span className="font-mono text-primary-600">Running on port 3000</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 pt-6 border-t border-slate-200 text-center text-sm text-slate-500">
-            <p>FuelFlow &copy; 2024 &mdash; Built with React, TypeScript, Vite, and Tailwind CSS</p>
-          </div>
-        </div>
-      </footer>
+      <BottomNavigation
+        items={NAV_ITEMS}
+        activeItem={activeTab}
+        onItemClick={(id) => setActiveTab(id as typeof activeTab)}
+      />
+
+      <LocationPermission
+        onGranted={(position) => {
+          const coords = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+          setUserLocation(coords);
+          setLocation(`Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`);
+        }}
+        onDenied={() => {}}
+      />
+
+      <StationDetailSheet
+        station={selectedStation}
+        isOpen={selectedStation !== null}
+        onClose={() => setSelectedStation(null)}
+        onNavigate={(station) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${station.latitude},${station.longitude}&travelmode=driving`;
+                window.open(url, '_blank');
+              },
+              () => {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}&travelmode=driving`;
+                window.open(url, '_blank');
+              },
+              { enableHighAccuracy: true, timeout: 10000 }
+            );
+          }
+          setSelectedStation(null);
+        }}
+      />
     </div>
   );
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 export default App;
