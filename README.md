@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FuelFlow
 
 **Find fuel. Skip the queue.**
@@ -84,3 +85,6 @@ fuelflow/
 ### Environment Variables
 
 See `.env.example` for all required and optional variables.
+=======
+# fuelflow
+>>>>>>> 2d16aea79eea9df5586cfcc88e70a57e874bdfcc
